@@ -6,8 +6,11 @@ python 版本 3.x
 
 # 文件说明
 ## prepare_ip
-- 下载 anpic 的 ip 文件
+- 下载 ip 文件
 - 分析 ip 文件，通过限制掩码长度，限制路由的条数 (使用了 chinaip 的代码)
+
+指定国家获取 格式 CDIR  
+<https://www.ip2location.com/blockvisitorsbycountry.aspx>  
 
 ## winroute
 封装了增加、删除路由的 winapi
@@ -20,6 +23,17 @@ python 版本 3.x
 - vpn 网关, 及对应接口序号
 
 接口序号通过 CMD 执行 `route print` 查看接口列表的第一列
+
+# 设置
+本地设置 首选 dns: opendns  
+备用 114
+颠倒好像不影响
+
+国内ip 全部走默认路由
+剩下的 导到 vpn
+
+成功登录steam美区
+
 
 # 耗时测试
 
