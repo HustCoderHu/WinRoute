@@ -52,14 +52,24 @@ def maskBit2strMask(nBit):
   # strMask += '.' + str(int(maskByte[3]))
   return strMask
 
-def getItem(routeItemFile):
+def getItem(routeItemFile, maxMaskBit):
   with open(routeItemFile, 'rt') as f:
     lineList = f.readlines()
-
+  
   routeList = [] # itm = {'strFwdDst': '', 'strFwdMask': ''}
+
+  # itm = {}
+  # itm['strFwdDst'] = '8.8.8.8'
+  # itm['strFwdMask'] = maskBit2strMask(32)
+  # routeList.append(itm)
+
   for line in lineList: # 192.168.1.1/24
+    if not line[0].isdigit(): # skip not ip blocks
+      continue
     itm = {}
     itm['strFwdDst'], strMaskBit = line.split('/')
+    if int(strMaskBit) > maxMaskBit:
+      continue
     itm['strFwdMask'] = maskBit2strMask(int(strMaskBit))
     routeList.append(itm)
   print('route item count: %d' % len(routeList))
@@ -68,9 +78,22 @@ def getItem(routeItemFile):
 
 def tst():
   print('tst')
-  start = time.clock()
   routeItemFile = r'D:\BrkGFW\ip_route\us_ip-max20.txt'
-  routeList = getItem(routeItemFile)
+  routeItemFile = r'D:\BrkGFW\us-cdir.txt'
+  routeItemFile = r'D:\BrkGFW\cn-cdir.txt'
+  start = time.clock()
+  routeList = getItem(routeItemFile, 32)
+  # us
+  # 26 len = 89428
+  # 25 len = 82072
+  # 24 len = 76504
+  # 
+  # 20 len = 19474
+  # cn
+  # 32 len 7029
+  # 28 len 6411
+  # 24 len 5986
+
   
   # print(maskBit2strMask(17))
   # print(maskBit2strMask(18))
@@ -85,42 +108,53 @@ def tst():
   return
 
 def tst2():
-  vpn = {'gateway': '192.168.1.1', 'fwdIfIndex': 15} # 26
-  defaultAdapter = {'gateway': '115.156.159.254', 'fwdIfIndex': 15}
+  strr0 = '1.22.56.0'
+  strr1 = '\n# Free IP2Location Firewall List by Country'
+  print(not strr0[0].isdigit()) # false
+  print(not strr1[0].isdigit()) # true
+  return
+
+def main():
+  vpn = {'gateway': '10.111.2.5', 'fwdIfIndex': 2} # 26
+  defaultAdapter = {'gateway': '115.156.159.254', 'fwdIfIndex': 18}
 
   routeItemFile = r'E:\github_repo\WinRoute\us_ip_max24.txt'
-  routeList = getItem(routeItemFile)
-
-  # routeList = routeList[0 : 200]
+  routeItemFile = r'D:\BrkGFW\us-cdir.txt'
+  routeItemFile = r'D:\BrkGFW\cn-cdir.txt'
+  routeList = getItem(routeItemFile, 32)
 
   #实例
   route=winroute.WinRoute()
-  return
+  # return
 
+  addRoute = True
+  # addRoute = False
+  if addRoute:
   # 加路由 计时
-  start = time.clock()
-  for itm in routeList:
-    route.CreateIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], vpn['gateway'], 
-        dwForwardIfIndex=vpn['fwdIfIndex'])
-  elapsed = (time.clock() - start)
-  print(elapsed)
-
-  input()
-
-  # 删路由 计时
-  start = time.clock()
-  for itm in routeList:
-    route.DeleteIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], vpn['gateway'], 
-        dwForwardIfIndex=vpn['fwdIfIndex'])
-  elapsed = (time.clock() - start)
-  print(elapsed)
-
-  return
-
-def main(_):
+    print('add route')
+    start = time.clock()
+    for itm in routeList:
+      # route.CreateIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], vpn['gateway'], 
+          # dwForwardIfIndex=vpn['fwdIfIndex'])
+      route.CreateIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], defaultAdapter['gateway'], 
+          dwForwardIfIndex=defaultAdapter['fwdIfIndex'])
+    elapsed = (time.clock() - start)
+    print(elapsed)
+  # input()
+  else :
+    print('delete route')
+    # 删路由 计时
+    start = time.clock()
+    for itm in routeList:
+      # route.DeleteIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], vpn['gateway'], 
+          # dwForwardIfIndex=vpn['fwdIfIndex'])
+      route.DeleteIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], defaultAdapter['gateway'], 
+          dwForwardIfIndex=defaultAdapter['fwdIfIndex'])
+    elapsed = (time.clock() - start)
+    print(elapsed)
   return
 
 if __name__ == '__main__':
   # main()
-  # tst()
-  tst2()
+  tst()
+  # tst2()
