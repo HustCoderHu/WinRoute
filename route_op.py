@@ -1,20 +1,24 @@
+# -*- coding:utf-8 -*-
 import os
 import os.path as path
 import sys
 
-cwd = r'E:\github_repo\WinRoute'
-os.chdir(cwd)
-print(os.getcwd())
-sys.path.append(cwd)
-import prepare_ip
-import winroute
-
-#!/usr/bin/python
-# -*- coding:utf-8 -*-
+import json
 import time
 from pprint import pprint
 from urllib import request
 import struct
+
+cwd = r'E:\github_repo\WinRoute'
+cwd = r'D:\docs\github_repo\WinRoute'
+os.chdir(cwd)
+print(os.getcwd())
+sys.path.append(cwd)
+
+itm_dict_file = r'default_interface_and_gw.json'
+# import prepare_ip
+import winroute
+import test_wmi
 
 # import winroute.WinRoute as WinRoute
 # import winroute.winroute as winroute
@@ -81,6 +85,7 @@ def tst():
   routeItemFile = r'D:\BrkGFW\ip_route\us_ip-max20.txt'
   routeItemFile = r'D:\BrkGFW\us-cdir.txt'
   routeItemFile = r'D:\BrkGFW\cn-cdir.txt'
+  routeItemFile = r'D:\docs\github_repo\WinRoute\cn-cdir.txt'
   start = time.clock()
   routeList = getItem(routeItemFile, 32)
   # us
@@ -93,8 +98,7 @@ def tst():
   # 32 len 7029
   # 28 len 6411
   # 24 len 5986
-
-  
+ 
   # print(maskBit2strMask(17))
   # print(maskBit2strMask(18))
   # print(maskBit2strMask(19))
@@ -115,46 +119,71 @@ def tst2():
   return
 
 def main():
-  vpn = {'gateway': '10.111.2.5', 'fwdIfIndex': 2} # 26
-  defaultAdapter = {'gateway': '115.156.159.254', 'fwdIfIndex': 18}
+  # vpn = {'gateway': '10.111.2.5', 'fwdIfIndex': 37} # 26
+  # vpn = {'gateway': '10.111.2.5', 'fwdIfIndex': 4} # 26
 
   routeItemFile = r'E:\github_repo\WinRoute\us_ip_max24.txt'
   routeItemFile = r'D:\BrkGFW\us-cdir.txt'
   routeItemFile = r'D:\BrkGFW\cn-cdir.txt'
+  routeItemFile = r'D:\docs\github_repo\WinRoute\cn-cdir.txt'
+  
   routeList = getItem(routeItemFile, 32)
 
   #实例
   route=winroute.WinRoute()
   # return
 
-  addRoute = True
-  # addRoute = False
+  addRoute = False
+  if len(sys.argv) > 1:
+    addRoute = True
+
+  defaultAdapter = {
+      'gateway': '192.168.1.1',
+      'fwdIfIndex': -1
+    }
   if addRoute:
-  # 加路由 计时
     print('add route')
-    start = time.clock()
+    # 保存默认网关 删除时使用
+    itm_dict = test_wmi.getDefaultGateWayFromRouteTable()
+    print(itm_dict)
+    defaultAdapter['gateway'] = itm_dict['NextHop']
+    defaultAdapter['fwdIfIndex'] = itm_dict['InterfaceIndex']
+    print(defaultAdapter)
+    with open(itm_dict_file, 'w') as f:
+      json.dump(itm_dict, f)
+
+    # 加路由 计时
+    start = time.process_time()
+	# DeprecationWarning: time.clock has been deprecated in Python 3.3 and will be removed from Python 3.8: 
+	# use time.perf_counter or time.process_time instead
     for itm in routeList:
       # route.CreateIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], vpn['gateway'], 
           # dwForwardIfIndex=vpn['fwdIfIndex'])
+      # print('CreateIpForwardEntry')
       route.CreateIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], defaultAdapter['gateway'], 
           dwForwardIfIndex=defaultAdapter['fwdIfIndex'])
-    elapsed = (time.clock() - start)
+    elapsed = (time.process_time() - start)
     print(elapsed)
   # input()
   else :
     print('delete route')
+    with open(itm_dict_file, 'r') as f:
+      itm_dict = json.load(f)
+    print(itm_dict)
+    defaultAdapter['gateway'] = itm_dict['NextHop']
+    defaultAdapter['fwdIfIndex'] = itm_dict['InterfaceIndex']
     # 删路由 计时
-    start = time.clock()
+    start = time.process_time()
     for itm in routeList:
       # route.DeleteIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], vpn['gateway'], 
           # dwForwardIfIndex=vpn['fwdIfIndex'])
       route.DeleteIpForwardEntry(itm['strFwdDst'], itm['strFwdMask'], defaultAdapter['gateway'], 
           dwForwardIfIndex=defaultAdapter['fwdIfIndex'])
-    elapsed = (time.clock() - start)
+    elapsed = (time.process_time() - start)
     print(elapsed)
   return
 
 if __name__ == '__main__':
-  # main()
-  tst()
+  main()
+  # tst()
   # tst2()
