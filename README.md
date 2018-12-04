@@ -4,6 +4,10 @@ Use Python to Manage Windows Route Table with IP Helper Functions（iphlpapi.dll
 
 python 版本 3.x
 
+# 思路
+- 全局模式下，国内流量导向原始默认网关，剩下的全部走 vpn 网关
+- 国外流量导向 vpn 网关
+
 # 文件说明
 ## prepare_ip
 - 下载 ip 文件
@@ -12,14 +16,24 @@ python 版本 3.x
 指定国家获取 格式 CDIR  
 <https://www.ip2location.com/blockvisitorsbycountry.aspx>  
 
+# test_wmi
+获取默认路由即 0.0.0.0/0 (且跃点值最小的) 那一条  
+即使有多张网卡跃点数相同，也只取最靠前的一条  
+
+在开启 vpn 前运行
+
+wmi 依赖 包 `wmi` 和 `pywin32`
+
 ## winroute
 封装了增加、删除路由的 winapi
 
 # route_op
 读取 prepare 生成的文件(里的路由)，调用 Winroute 的方法增减系统路由(管理员权限)
 
+默认网关通过上面的 test_wmi 文件里的函数获取，然后存入到文件，后续恢复时用。  
+写到文件的原因是，路由条目数量增大时，恢复时 wmi 的函数获取路由的时间开销较大，找原始默认网关很费时。
+
 需要设置
-- 默认网关, 及对应接口序号
 - vpn 网关, 及对应接口序号
 
 接口序号通过 CMD 执行 `route print` 查看接口列表的第一列
