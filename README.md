@@ -31,6 +31,11 @@ wmi 依赖 包 `wmi` 和 `pywin32`
 写到文件的原因是，路由条目数量增大时，恢复时 wmi 的函数获取路由的时间开销较大，找原始默认网关很费时。
 
 # 设置
+除了 WAN 口的 dns保留
+其他的网卡的全部取消
+高级 TCP/IP 设置中 -> DNS 选项卡 取消dns注册，不附加主dns后缀
+参考 <https://social.technet.microsoft.com/Forums/zh-CN/ec1b8681-7bae-49b7-ab5e-914f4c22e5c2/windows?forum=win10itprogeneralCN>
+
 本地设置 首选 dns: opendns  
 备用 114
 颠倒好像不影响
